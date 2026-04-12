@@ -11,7 +11,29 @@ npm install
 npm run dev
 ```
 
-Open the local URL, allow camera access, then **pinch thumb and index finger** to draw and release to lift the pen.
+Open the local URL (or your deployed site), allow camera access, then follow **Using the app** below.
+
+## Using the app (for users)
+
+1. **Open the page** in a recent desktop browser (Chrome or Edge work well). The site must be **HTTPS** or **localhost** so the browser allows the webcam.
+2. When prompted, **Allow** camera access. If you denied it before, use the lock icon in the address bar to reset permissions.
+3. **Face the webcam** and raise one hand. **Mirror** (on by default) should feel natural, like a mirror: your hand moves the same way you expect.
+4. **Draw:** bring **thumb tip and index tip** together (a pinch). Hold that pinch and move your hand — the **index fingertip** is the pen. **Open** the pinch (spread thumb and index) to lift the pen off the canvas.
+5. **Erase:** choose **Erase**, pinch again, and move over ink you want to remove.
+6. **Toolbar**
+   - **Draw / Erase** — mode
+   - **Colored dots** — ink color (draw mode)
+   - **Brush** — line thickness
+   - **Dim** — darken the camera so neon strokes stand out
+   - **Mirror** — flip the video horizontally (recommended for selfie cam)
+   - **Hide cam** — keep tracking but hide the video (ink still works)
+   - **Debug** — optional hand skeleton overlay (for tuning / demos)
+   - **Diagnose** — live pinch distance and why a stroke stopped (if lines “break,” use this)
+   - **Undo** — remove last finished stroke
+   - **Clear** — wipe the canvas
+   - **Save PNG** — download the drawing (transparent where there is no ink over the dim layer; mostly you get the neon layer as exported)
+
+**Tips:** Good lighting on your hand helps. If the line keeps stopping, turn on **Diagnose** — a rising **pinch** number usually means you’re opening the pinch slightly; **hand-gap** means the tracker lost your hand for a moment.
 
 ## Stack
 

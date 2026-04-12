@@ -30,8 +30,12 @@ export function pinchWantsDrawForIndexHeight(
   indexNy: number,
 ): boolean {
   const highInFrame = indexNy < 0.22;
-  const on = highInFrame ? 0.06 : 0.052;
-  const off = highInFrame ? 0.085 : 0.072;
+  let on = highInFrame ? 0.06 : 0.052;
+  let off = highInFrame ? 0.085 : 0.072;
+  if (currentlyDrawing) {
+    on += 0.01;
+    off += 0.022;
+  }
   return pinchWantsDraw(distance, currentlyDrawing, on, off);
 }
 

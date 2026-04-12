@@ -19,6 +19,7 @@ function App() {
   const [brushSize, setBrushSize] = useState(14);
   const [mirror, setMirror] = useState(true);
   const [debug, setDebug] = useState(false);
+  const [diagnostics, setDiagnostics] = useState(false);
   const [cameraHidden, setCameraHidden] = useState(false);
   const [tool, setTool] = useState<'draw' | 'erase'>('draw');
   const [videoDim, setVideoDim] = useState(0.45);
@@ -108,6 +109,14 @@ function App() {
             >
               Debug
             </button>
+            <button
+              type="button"
+              className={diagnostics ? 'active' : ''}
+              onClick={() => setDiagnostics((d) => !d)}
+              title="Why did the stroke stop? Live pinch distance & log"
+            >
+              Diagnose
+            </button>
           </div>
           <div className="tool-group actions">
             <button type="button" onClick={() => canvasRef.current?.undo()}>
@@ -134,6 +143,7 @@ function App() {
           brushSize={brushSize}
           mirror={mirror}
           debug={debug}
+          diagnostics={diagnostics}
           cameraHidden={cameraHidden}
           tool={tool}
           videoDim={videoDim}
@@ -146,7 +156,11 @@ function App() {
               Raise your hand. Touch thumb tip to index tip (pinch) to paint;
               release to lift the pen.
             </li>
-            <li>Toggle <strong>Debug</strong> to see the skeleton overlay.</li>
+            <li>
+              Toggle <strong>Debug</strong> for the skeleton,{' '}
+              <strong>Diagnose</strong> to see pinch distance and why a stroke
+              ended.
+            </li>
           </ol>
           <p className="hint-foot">
             Built with React, Vite, Canvas, and MediaPipe Hand Landmarker

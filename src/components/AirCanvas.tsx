@@ -13,6 +13,11 @@ import {
   type NormalizedLandmark,
 } from '@mediapipe/tasks-vision';
 import { normToCanvas } from '../lib/coords';
+import {
+  GESTURE_ENTER_FRAMES,
+  GESTURE_EXIT_FRAMES,
+  HAND_LOST_GRACE_CAMERA_FRAMES,
+} from '../lib/gestureConstants';
 import { createDrawGestureMachine } from '../lib/gestureMachine';
 import {
   getThumbIndexTips,
@@ -43,6 +48,8 @@ export type AirCanvasProps = {
   cameraHidden: boolean;
   tool: 'draw' | 'erase';
   videoDim: number;
+  /** Live HUD: pinch distance, draw state, why strokes ended */
+  diagnostics: boolean;
 };
 
 export type AirCanvasHandle = {
@@ -81,6 +88,7 @@ export const AirCanvas = forwardRef<AirCanvasHandle, AirCanvasProps>(
       cameraHidden,
       tool,
       videoDim,
+      diagnostics,
     },
     ref,
   ) {
@@ -94,7 +102,9 @@ export const AirCanvas = forwardRef<AirCanvasHandle, AirCanvasProps>(
     const activeStrokeRef = useRef<NormPt[]>([]);
     const smoothedNormRef = useRef<NormPt | null>(null);
     const prevGestureDrawingRef = useRef(false);
-    const gestureRef = useRef(createDrawGestureMachine(3, 5));
+    const gestureRef = useRef(
+      createDrawGestureMachine(GESTURE_ENTER_FRAMES, GESTURE_EXIT_FRAMES),
+    );
     const lastVideoTimeRef = useRef(-1);
     const hadLandmarksRef = useRef(false);
     const lastRawNormRef = useRef<NormPt | null>(null);
@@ -102,12 +112,17 @@ export const AirCanvas = forwardRef<AirCanvasHandle, AirCanvasProps>(
     const drawingNowRef = useRef(false);
     const lastPaintCanvasRef = useRef<Pt | null>(null);
     const stabilizedTipPrevRef = useRef<NormPt | null>(null);
+    const handLostStreakRef = useRef(0);
+    const lastPinchDistRef = useRef<number | null>(null);
+    const lastStrokeStopRef = useRef<string>('—');
+    const strokeStopLogRef = useRef<string[]>([]);
 
     const optsRef = useRef({
       brushColor,
       brushSize,
       mirror,
       debug,
+      diagnostics,
       cameraHidden,
       tool,
       videoDim,
@@ -118,11 +133,20 @@ export const AirCanvas = forwardRef<AirCanvasHandle, AirCanvasProps>(
         brushSize,
         mirror,
         debug,
+        diagnostics,
         cameraHidden,
         tool,
         videoDim,
       };
     });
+
+    const logStrokeStop = useCallback((reason: string) => {
+      lastStrokeStopRef.current = reason;
+      const log = strokeStopLogRef.current;
+      const t = new Date().toISOString().slice(11, 23);
+      log.unshift(`${t} ${reason}`);
+      log.length = Math.min(8, log.length);
+    }, []);
 
     const [modelStatus, setModelStatus] = useState<
       'loading' | 'ready' | 'error'
@@ -187,7 +211,14 @@ export const AirCanvas = forwardRef<AirCanvasHandle, AirCanvasProps>(
           lastLandmarksRef.current = null;
           lastPaintCanvasRef.current = null;
           stabilizedTipPrevRef.current = null;
-          gestureRef.current = createDrawGestureMachine(3, 5);
+          handLostStreakRef.current = 0;
+          strokeStopLogRef.current = [];
+          lastStrokeStopRef.current = '—';
+          lastPinchDistRef.current = null;
+          gestureRef.current = createDrawGestureMachine(
+            GESTURE_ENTER_FRAMES,
+            GESTURE_EXIT_FRAMES,
+          );
           const stage = stageRef.current;
           const paint = paintRef.current;
           if (stage && paint) {
@@ -348,10 +379,12 @@ export const AirCanvas = forwardRef<AirCanvasHandle, AirCanvasProps>(
           const lm = result.landmarks[0];
 
           if (lm) {
+            handLostStreakRef.current = 0;
             hadLandmarksRef.current = true;
             lastLandmarksRef.current = lm;
             const { thumb, index } = getThumbIndexTips(lm);
             const dist = tipDistance2D(thumb, index);
+            lastPinchDistRef.current = dist;
             const idx = lm[INDEX_TIP];
             const rawTip = { nx: idx.x, ny: idx.y };
             stabilizedTipPrevRef.current = stabilizeNormTip(
@@ -369,6 +402,9 @@ export const AirCanvas = forwardRef<AirCanvasHandle, AirCanvasProps>(
             const newDrawingNow = gestureRef.current(pinchActive);
 
             if (wasGesturing && !newDrawingNow && activeStrokeRef.current.length > 1) {
+              logStrokeStop(
+                `pinch_open (thumb–index gap ${dist.toFixed(3)}, need wider to stay drawing)`,
+              );
               strokesRef.current.push({
                 points: [...activeStrokeRef.current],
                 color: opt.brushColor,
@@ -383,27 +419,48 @@ export const AirCanvas = forwardRef<AirCanvasHandle, AirCanvasProps>(
             prevGestureDrawingRef.current = newDrawingNow;
             drawingNowRef.current = newDrawingNow;
           } else {
-            if (hadLandmarksRef.current) {
-              gestureRef.current = createDrawGestureMachine(3, 5);
+            const trackingOrDrawing =
+              hadLandmarksRef.current || prevGestureDrawingRef.current;
+            if (trackingOrDrawing) {
+              handLostStreakRef.current += 1;
+            } else {
+              handLostStreakRef.current = 0;
             }
-            hadLandmarksRef.current = false;
-            lastLandmarksRef.current = null;
-            lastRawNormRef.current = null;
-            stabilizedTipPrevRef.current = null;
-            if (prevGestureDrawingRef.current && activeStrokeRef.current.length > 1) {
-              const o = optsRef.current;
-              strokesRef.current.push({
-                points: [...activeStrokeRef.current],
-                color: o.brushColor,
-                width: o.brushSize,
-                erase: o.tool === 'erase',
-              });
+
+            if (
+              handLostStreakRef.current >= HAND_LOST_GRACE_CAMERA_FRAMES &&
+              trackingOrDrawing
+            ) {
+              if (hadLandmarksRef.current) {
+                gestureRef.current = createDrawGestureMachine(
+                  GESTURE_ENTER_FRAMES,
+                  GESTURE_EXIT_FRAMES,
+                );
+              }
+              if (prevGestureDrawingRef.current && activeStrokeRef.current.length > 1) {
+                logStrokeStop(
+                  `hand_lost (${HAND_LOST_GRACE_CAMERA_FRAMES}+ camera frames, no landmarks)`,
+                );
+                const o = optsRef.current;
+                strokesRef.current.push({
+                  points: [...activeStrokeRef.current],
+                  color: o.brushColor,
+                  width: o.brushSize,
+                  erase: o.tool === 'erase',
+                });
+              }
+              hadLandmarksRef.current = false;
+              lastLandmarksRef.current = null;
+              lastRawNormRef.current = null;
+              stabilizedTipPrevRef.current = null;
+              activeStrokeRef.current = [];
+              lastPaintCanvasRef.current = null;
+              prevGestureDrawingRef.current = false;
+              drawingNowRef.current = false;
+              smoothedNormRef.current = null;
+              lastPinchDistRef.current = null;
+              handLostStreakRef.current = 0;
             }
-            activeStrokeRef.current = [];
-            lastPaintCanvasRef.current = null;
-            prevGestureDrawingRef.current = false;
-            drawingNowRef.current = false;
-            smoothedNormRef.current = null;
           }
         }
 
@@ -474,11 +531,35 @@ export const AirCanvas = forwardRef<AirCanvasHandle, AirCanvasProps>(
             octx.restore();
           }
         }
+
+        if (opt.diagnostics) {
+          const lines = [
+            `draw=${drawingNowRef.current ? 'on' : 'off'}  pinch=${lastPinchDistRef.current != null ? lastPinchDistRef.current.toFixed(3) : '—'}  hand-gap=${handLostStreakRef.current}/${HAND_LOST_GRACE_CAMERA_FRAMES}`,
+            `debounce: pinch ${GESTURE_ENTER_FRAMES}f on / ${GESTURE_EXIT_FRAMES}f off`,
+            `last stop: ${lastStrokeStopRef.current}`,
+            ...strokeStopLogRef.current.slice(0, 4).map((l) => `· ${l}`),
+          ];
+          octx.save();
+          octx.font = '11px ui-monospace, Menlo, monospace';
+          octx.textAlign = 'left';
+          octx.textBaseline = 'bottom';
+          let y = ch - 8;
+          for (let i = lines.length - 1; i >= 0; i--) {
+            const line = lines[i];
+            const tw = Math.min(cw - 20, octx.measureText(line).width + 12);
+            octx.fillStyle = 'rgba(0, 0, 0, 0.78)';
+            octx.fillRect(6, y - 13, tw, 17);
+            octx.fillStyle = '#8ef5c0';
+            octx.fillText(line, 10, y);
+            y -= 19;
+          }
+          octx.restore();
+        }
       };
 
       raf = requestAnimationFrame(loop);
       return () => cancelAnimationFrame(raf);
-    }, [modelStatus, videoReady, mapNorm]);
+    }, [modelStatus, videoReady, mapNorm, logStrokeStop]);
 
     return (
       <div ref={stageRef} className="air-stage">
