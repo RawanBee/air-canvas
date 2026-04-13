@@ -14,6 +14,7 @@ const SWATCHES = [
 ];
 
 function App() {
+  const logoSrc = `${import.meta.env.BASE_URL}logo.svg`;
   const canvasRef = useRef<AirCanvasHandle>(null);
   const [brushColor, setBrushColor] = useState('#ffe566');
   const [brushSize, setBrushSize] = useState(6);
@@ -30,7 +31,7 @@ function App() {
         <div className="brand">
           <img
             className="brand-mark"
-            src="/logo.svg"
+            src={logoSrc}
             width={48}
             height={48}
             alt=""
