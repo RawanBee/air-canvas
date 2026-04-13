@@ -1,8 +1,13 @@
 # Air Canvas
 
-Hand-tracked **air drawing** in the browser: webcam → [MediaPipe Hand Landmarker](https://ai.google.dev/edge/mediapipe/solutions/vision/hand_landmarker/web_js) → normalized landmarks → pinch gesture → persistent neon strokes on canvas.
+Hand-tracked **air drawing** in the browser: webcam → [MediaPipe Hand Landmarker](https://ai.google.dev/edge/mediapipe/solutions/vision/hand_landmarker/web_js) → normalized landmarks → thumb–index **touch** (near-zero tip distance) → persistent neon strokes on canvas.
 
 Built to demo well in a portfolio: clear architecture, deliberate gesture debouncing, and a polished dark UI.
+
+> [!IMPORTANT]
+> **Attribution Required:** This repository uses a custom MIT-style license.
+> If you redistribute or ship a derivative, keep the project credit line from `LICENSE`
+> (including the Air Canvas repo URL) with the copyright notice.
 
 ## Quick start
 
@@ -18,8 +23,8 @@ Open the local URL (or your deployed site), allow camera access, then follow **U
 1. **Open the page** in a recent desktop browser (Chrome or Edge work well). The site must be **HTTPS** or **localhost** so the browser allows the webcam.
 2. When prompted, **Allow** camera access. If you denied it before, use the lock icon in the address bar to reset permissions.
 3. **Face the webcam** and raise one hand. **Mirror** (on by default) should feel natural, like a mirror: your hand moves the same way you expect.
-4. **Draw:** bring **thumb tip and index tip** together (a pinch). Hold that pinch and move your hand — the **index fingertip** is the pen. **Open** the pinch (spread thumb and index) to lift the pen off the canvas.
-5. **Erase:** choose **Erase**, pinch again, and move over ink you want to remove.
+4. **Draw:** touch **thumb tip and index tip** together (near-zero gap — they must be touching or almost touching). Only then does the pen draw; if the tips separate, drawing stops. Move your hand while they stay together — the **index fingertip** is the pen path.
+5. **Erase:** choose **Erase**, touch tips together again, and move over ink you want to remove.
 6. **Toolbar**
    - **Draw / Erase** — mode
    - **Colored dots** — ink color (draw mode)
@@ -33,7 +38,7 @@ Open the local URL (or your deployed site), allow camera access, then follow **U
    - **Clear** — wipe the canvas
    - **Save PNG** — download the drawing (transparent where there is no ink over the dim layer; mostly you get the neon layer as exported)
 
-**Tips:** Good lighting on your hand helps. If the line keeps stopping, turn on **Diagnose** — a rising **pinch** number usually means you’re opening the pinch slightly; **hand-gap** means the tracker lost your hand for a moment.
+**Tips:** Good lighting on your hand helps. If the line keeps stopping, turn on **Diagnose** — a rising **pinch** number means the thumb–index gap opened (drawing needs tips nearly touching); **hand-gap** means the tracker lost your hand for a moment.
 
 ## Stack
 
@@ -90,4 +95,4 @@ For a subpath deploy, set `base` in `vite.config.ts` (e.g. `base: '/air-canvas/'
 
 ## License
 
-MIT (app code). MediaPipe models and runtime are subject to [their license](https://www.npmjs.com/package/@mediapipe/tasks-vision).
+This project uses a custom MIT-style license with required attribution. Copyright (c) 2026 Rawan Bazadough. MediaPipe models and runtime remain subject to [their license](https://www.npmjs.com/package/@mediapipe/tasks-vision).

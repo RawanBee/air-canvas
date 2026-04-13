@@ -1,0 +1,55 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none" aria-hidden="true">
+  <defs>
+    <linearGradient id="ac-bg" x1="8" y1="4" x2="56" y2="62" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#1a1530"/>
+      <stop offset="1" stop-color="#0a0814"/>
+    </linearGradient>
+    <linearGradient id="ac-gold" x1="10" y1="44" x2="52" y2="20" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#fff8d4"/>
+      <stop offset=".45" stop-color="#ffe566"/>
+      <stop offset="1" stop-color="#d4a832"/>
+    </linearGradient>
+    <linearGradient id="ac-cyan" x1="40" y1="22" x2="52" y2="40" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#b8fff8"/>
+      <stop offset="1" stop-color="#40e8d8"/>
+    </linearGradient>
+    <filter id="ac-glow" x="-40%" y="-40%" width="180%" height="180%">
+      <feGaussianBlur stdDeviation="1.8" result="b"/>
+      <feMerge>
+        <feMergeNode in="b"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+    <filter id="ac-soft" x="-60%" y="-60%" width="220%" height="220%">
+      <feGaussianBlur stdDeviation="3" result="s"/>
+      <feMerge>
+        <feMergeNode in="s"/>
+      </feMerge>
+    </filter>
+  </defs>
+  <rect width="64" height="64" rx="16" fill="url(#ac-bg)"/>
+  <rect width="64" height="64" rx="16" fill="none" stroke="rgba(255,229,102,0.12)" stroke-width="1"/>
+  <!-- ambient glow under stroke -->
+  <path
+    d="M10 44 C 22 20, 34 16, 54 26"
+    stroke="#ffe566"
+    stroke-width="10"
+    stroke-linecap="round"
+    opacity="0.22"
+    filter="url(#ac-soft)"
+  />
+  <!-- neon air stroke -->
+  <path
+    d="M10 44 C 22 20, 34 16, 54 26"
+    stroke="url(#ac-gold)"
+    stroke-width="3.2"
+    stroke-linecap="round"
+    filter="url(#ac-glow)"
+  />
+  <!-- thumb + index (touch) -->
+  <path d="M46 40 L 38 33" stroke="url(#ac-cyan)" stroke-width="2.4" stroke-linecap="round" opacity="0.95"/>
+  <path d="M50 28 L 39 30" stroke="url(#ac-cyan)" stroke-width="2.4" stroke-linecap="round" opacity="0.95"/>
+  <!-- pinch highlight -->
+  <circle cx="37.5" cy="31.5" r="5" fill="url(#ac-gold)" filter="url(#ac-glow)" opacity="0.95"/>
+  <circle cx="37.5" cy="31.5" r="2.2" fill="#fffef5"/>
+</svg>

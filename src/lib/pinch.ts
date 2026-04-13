@@ -9,34 +9,34 @@ export function tipDistance2D(a: NormalizedLandmark, b: NormalizedLandmark): num
   return Math.hypot(dx, dy);
 }
 
-/** Hysteresis: harder to start drawing than to keep drawing (reduces flicker). */
+/**
+ * Drawing only when thumb and index tips are effectively **touching** (distance
+ * ~0 in normalized image space). Webcam noise means we use a tiny epsilon, not
+ * literal 0.
+ *
+ * Hysteresis: a hair looser while already drawing so one noisy frame doesn’t
+ * instantly lift the pen.
+ */
+const TOUCH_DRAW_MAX = 0.04;
+const TOUCH_HOLD_MAX = 0.056;
+
 export function pinchWantsDraw(
   distance: number,
   currentlyDrawing: boolean,
-  pinchOn = 0.052,
-  pinchOff = 0.072,
+  touchToStart = TOUCH_DRAW_MAX,
+  touchToHold = TOUCH_HOLD_MAX,
 ): boolean {
-  return currentlyDrawing ? distance < pinchOff : distance < pinchOn;
+  return currentlyDrawing ? distance < touchToHold : distance < touchToStart;
 }
 
-/**
- * When the index is high in the frame (small y), perspective makes the pinch
- * look tighter and tracking noisier — widen thresholds so the stroke does not
- * break up while you move.
- */
+/** Same as {@link pinchWantsDraw}; index height kept for call-site compatibility. */
 export function pinchWantsDrawForIndexHeight(
   distance: number,
   currentlyDrawing: boolean,
-  indexNy: number,
+  _indexNy: number,
 ): boolean {
-  const highInFrame = indexNy < 0.22;
-  let on = highInFrame ? 0.06 : 0.052;
-  let off = highInFrame ? 0.085 : 0.072;
-  if (currentlyDrawing) {
-    on += 0.01;
-    off += 0.022;
-  }
-  return pinchWantsDraw(distance, currentlyDrawing, on, off);
+  void _indexNy;
+  return pinchWantsDraw(distance, currentlyDrawing);
 }
 
 export function getThumbIndexTips(landmarks: NormalizedLandmark[]) {

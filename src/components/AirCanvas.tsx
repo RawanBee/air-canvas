@@ -403,7 +403,7 @@ export const AirCanvas = forwardRef<AirCanvasHandle, AirCanvasProps>(
 
             if (wasGesturing && !newDrawingNow && activeStrokeRef.current.length > 1) {
               logStrokeStop(
-                `pinch_open (thumb–index gap ${dist.toFixed(3)}, need wider to stay drawing)`,
+                `tips_separated (gap ${dist.toFixed(3)}, draw only when nearly touching)`,
               );
               strokesRef.current.push({
                 points: [...activeStrokeRef.current],

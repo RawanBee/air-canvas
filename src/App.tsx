@@ -16,9 +16,9 @@ const SWATCHES = [
 function App() {
   const canvasRef = useRef<AirCanvasHandle>(null);
   const [brushColor, setBrushColor] = useState('#ffe566');
-  const [brushSize, setBrushSize] = useState(14);
+  const [brushSize, setBrushSize] = useState(6);
   const [mirror, setMirror] = useState(true);
-  const [debug, setDebug] = useState(false);
+  const [debug, setDebug] = useState(true);
   const [diagnostics, setDiagnostics] = useState(false);
   const [cameraHidden, setCameraHidden] = useState(false);
   const [tool, setTool] = useState<'draw' | 'erase'>('draw');
@@ -28,12 +28,18 @@ function App() {
     <div className="app">
       <header className="app-header">
         <div className="brand">
-          <span className="brand-mark" aria-hidden />
+          <img
+            className="brand-mark"
+            src="/logo.svg"
+            width={48}
+            height={48}
+            alt=""
+          />
           <div>
             <h1>Air Canvas</h1>
             <p className="tagline">
-              Pinch thumb and index finger to draw in the air — neon ink, zero
-              install.
+              Touch thumb and index tips together to draw; separate them to stop
+              — neon ink in the browser.
             </p>
           </div>
         </div>
@@ -153,8 +159,9 @@ function App() {
           <ol>
             <li>Allow camera access when prompted.</li>
             <li>
-              Raise your hand. Touch thumb tip to index tip (pinch) to paint;
-              release to lift the pen.
+              Raise your hand. Keep thumb and index tips <strong>touching</strong>{' '}
+              to paint; if they separate, drawing stops (the app treats “zero” gap
+              as touching — see <strong>Diagnose</strong> for the live number).
             </li>
             <li>
               Toggle <strong>Debug</strong> for the skeleton,{' '}
