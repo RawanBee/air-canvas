@@ -9,6 +9,10 @@ Built to demo well in a portfolio: clear architecture, deliberate gesture deboun
 > If you redistribute or ship a derivative, keep the project credit line from `LICENSE`
 > (including the Air Canvas repo URL) with the copyright notice.
 
+## Live demo
+
+**Try it here:** [https://rawanbee.github.io/air-canvas/](https://rawanbee.github.io/air-canvas/)
+
 ## Quick start
 
 ```bash
